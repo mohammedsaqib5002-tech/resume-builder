@@ -109,6 +109,15 @@ function Preview() {
         })
         .filter((block) => block.height < pagePixelHeight);
 
+      // Detect sections that must begin on a new PDF page.
+     const forcedPageStarts = Array.from(
+      resumeRef.current.querySelectorAll(".pdf-page-start")
+     ).map((element) => {
+     const rect = element.getBoundingClientRect();
+
+     return (rect.top - resumeRect.top) * scaleY;
+    });
+
 
       let startY = 0;
       let pageNumber = 0;
@@ -125,6 +134,15 @@ function Preview() {
           startY + availablePageHeight,
           canvas.height
         );
+
+        // Force marked sections to begin on a new page.
+          const nextForcedPageStart = forcedPageStarts.find(
+         (position) => position > startY + 10 && position < endY
+         );
+
+if (nextForcedPageStart) {
+  endY = nextForcedPageStart;
+}
 
         // Avoid splitting smaller sections and entries.
         if (endY < canvas.height) {
@@ -563,9 +581,7 @@ function Preview() {
 
               {/* Certifications */}
               {certifications.length > 0 && (
-                <Box mb={4}
-                  sx={{ breakBefore: "page", pageBreakBefore: "always" }}
-                >
+                <Box mb={4} className="pdf-page-start">
                   <SectionHeading>CERTIFICATIONS</SectionHeading>
 
                   {certifications.map((certificate, index) => (
