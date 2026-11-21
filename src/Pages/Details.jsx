@@ -455,9 +455,12 @@ function Details() {
                       {...register("startYear", {
                         required: "Start year is required",
                         pattern: {
-                          value: /^\d{4}$/,
-                          message: "Enter a valid 4-digit year",
-                        },
+                         value: /^\d{4}$/,
+                         message: "Enter a valid 4-digit year",
+                       },
+                       validate: (value) =>
+                       Number(value) <= new Date().getFullYear() ||
+                       "Start year cannot be in the future",
                       })}
                       error={!!errors.startYear}
                       helperText={errors.startYear?.message}
@@ -472,13 +475,16 @@ function Details() {
                       placeholder="e.g. 2026"
                       {...register("endYear", {
                         required: "End year is required",
-                        pattern: {
-                          value: /^\d{4}$/,
-                          message: "Enter a valid 4-digit year",
-                        },
-                        validate: (value) =>
-                          Number(value) >= Number(getValues("startYear")) ||
-                          "End year must be after Start year",
+                        validate: (value) => {
+                          if (Number(value) > new Date().getFullYear()) {
+                            return "End year cannot be in the future";
+                          }
+
+                         return (
+                            Number(value) >= Number(getValues("startYear")) ||
+                            "End year must be after Start year"
+                       );
+                       },
                       })}
                       error={!!errors.endYear}
                       helperText={errors.endYear?.message}
