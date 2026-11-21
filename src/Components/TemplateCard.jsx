@@ -42,8 +42,9 @@ function TemplateCard({ template }) {
       >
         {/* Resume Preview */}
         <Box
-        aria-label={`Preview of ${template.name} resume template`}
-          sx={{
+  role="img"
+  aria-label={`Preview of ${template.name} resume template`}
+  sx={{
             width: "70%",
             height: "220px",
             backgroundColor: "white",
