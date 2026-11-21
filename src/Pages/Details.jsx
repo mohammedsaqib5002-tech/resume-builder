@@ -616,20 +616,24 @@ function Details() {
                 <Button
                   type="button"
                   variant="outlined"
-                  onClick={() =>
-                    addProject({
-                      name: "",
-                      technologies: "",
-                      description: "",
-                      link: "",
-                    })
-                  }
-                >
-                  + Add Project
-                </Button>
-              </>
-            )}
+                  onClick={() => {
+                   const currentProjects = getValues("projects");
 
+                  const hasEmptyProject = currentProjects?.some(
+                    (project) => !project.name?.trim()
+                   );
+
+                  if (hasEmptyProject) {
+                  return;
+                  }
+
+               addProject({
+                 name: "",
+                 technologies: "",
+                 description: "",
+                link: "",
+              });
+              }}
             {/* STEP 6: CERTIFICATIONS */}
             {activeStep === 5 && (
               <>
