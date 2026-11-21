@@ -586,7 +586,7 @@ function Details() {
                       {...register(`projects.${index}.link`, {
                         validate: (value) => {
                           if (!value || value.trim() === "") {
-                            return "Certificate link is required";
+                            return "project link is required";
                           }
 
                           const urlPattern =
@@ -594,7 +594,7 @@ function Details() {
 
                           return (
                             urlPattern.test(value.trim()) ||
-                            "Please enter a valid certificate URL (https://...)"
+                            "Please enter a valid project URL (https://...)"
                           );
                         },
                       })}
