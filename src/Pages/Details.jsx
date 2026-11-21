@@ -597,27 +597,22 @@ function Details() {
                       fullWidth
                       label="Project Link"
                       placeholder="https://example.com"
-                      {...register(`projects.${index}.link`, {
-                        validate: (value) => {
-                          if (!value || value.trim() === "") {
-                            return "project link is required";
-                          }
+                     {...register(`projects.${index}.link`, {
+                      required: "Project link is required",
+                      validate: (value) => {
+                    if (!value || value.trim() === "") {
+                       return "Project link is required";
+                   }
 
-                          const urlPattern =
-                            /^https?:\/\/(?:[\w-]+\.)+[\w-]+(?:\/[^\s]*)?$/i;
+                const urlPattern =
+                   /^https?:\/\/(?:[\w-]+\.)+[\w-]+(?:\/[^\s]*)?$/i;
 
-                          return (
-                            urlPattern.test(value.trim()) ||
-                            "Please enter a valid project URL (https://...)"
-                          );
-                        },
-                      })}
-                      error={!!errors.projects?.[index]?.link}
-                      helperText={errors.projects?.[index]?.link?.message}
-                    />
-                  </Paper>
-                ))}
-
+                return (
+                   urlPattern.test(value.trim()) ||
+                   "Please enter a valid project URL (https://...)"
+               );
+               },
+               })}
                 <Button
                   type="button"
                   variant="outlined"
@@ -705,20 +700,21 @@ function Details() {
                       fullWidth
                       label="Certificate Link"
                       placeholder="https://example.com"
-                      {...register(`certifications.${index}.link`, {
-                        validate: (value) => {
-                          if (!value || value.trim() === "") {
-                            return "Certificate link is required";
-                          }
+                     {...register(`certifications.${index}.link`, {
+                     required: "Certificate link is required",
+                     validate: (value) => {
+                    if (!value || value.trim() === "") {
+                    return "Certificate link is required";
+                     }
 
-                          const urlPattern =
-                            /^https?:\/\/(?:[\w-]+\.)+[\w-]+(?:\/[^\s]*)?$/i;
+                    const urlPattern =
+                    /^https?:\/\/(?:[\w-]+\.)+[\w-]+(?:\/[^\s]*)?$/i;
 
-                          return (
-                            urlPattern.test(value.trim()) ||
-                            "Please enter a valid certificate URL (https://...)"
-                          );
-                        },
+                     return (
+                     urlPattern.test(value.trim()) ||
+                      "Please enter a valid certificate URL (https://...)"
+                      );
+                      },
                       })}
                       error={!!errors.certifications?.[index]?.link}
                       helperText={errors.certifications?.[index]?.link?.message}
