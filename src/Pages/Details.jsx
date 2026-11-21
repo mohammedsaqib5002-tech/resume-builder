@@ -330,7 +330,7 @@ function Details() {
                       {...register("email", {
                         required: "Email is required",
                         pattern: {
-                          value: /^\S+@\S+\.\S+$/,
+                          value: /^\+?[0-9](?:[0-9\s-]*[0-9])?$/,
                           message: "Enter a valid email",
                         },
                       })}
