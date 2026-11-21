@@ -33,14 +33,23 @@ function Header() {
         }}
       >
         <Box
+          component="button"
+          type="button"
+          aria-label="Go to Home page"
           sx={{
             display: "flex",
             alignItems: "center",
             gap: 1,
-            cursor: "pointer"
+            cursor: "pointer",
+            border: "none",
+            background: "transparent",
+            padding: 0,
+            font: "inherit",
+            textAlign: "left"
           }}
           onClick={() => navigate("/")}
         >
+        
           <DescriptionIcon
             sx={{ color: "#2563eb", fontSize: 32 }}
           />

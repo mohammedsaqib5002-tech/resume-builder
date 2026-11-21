@@ -16,7 +16,7 @@ import {
   StepLabel,
   Grid,
   Chip,
-  Divider
+  Divider,
 } from "@mui/material";
 
 import {
@@ -26,7 +26,7 @@ import {
   updateSkills,
   updateProjects,
   updateCertifications,
-  setTemplate
+  setTemplate,
 } from "../Redux/ResumeSlice";
 
 import Header from "../Components/Header";
@@ -37,7 +37,7 @@ const steps = [
   "Education",
   "Key Skills",
   "Projects",
-  "Certifications"
+  "Certifications",
 ];
 
 function Details() {
@@ -49,7 +49,6 @@ function Details() {
 
   const resume = useSelector((state) => state.resume || {});
 
-
   const {
     register,
     trigger,
@@ -58,44 +57,40 @@ function Details() {
     control,
     setError,
     clearErrors,
-    formState: { errors }
+    formState: { errors },
   } = useForm({
     defaultValues: {
       ...(resume.personalInfo || {}),
       ...(resume.workExperience || {}),
       ...(resume.education || {}),
       skills: (resume.skills || []).join(", "),
-
       projects: (resume.projects || []).map((project) => ({
-        ...project
+        ...project,
       })),
-
-      certifications: (resume.certifications || []).map(
-        (certification) => ({
-          ...certification
-        })
-      )
-    }
+      certifications: (resume.certifications || []).map((certification) => ({
+        ...certification,
+      })),
+    },
   });
 
   // Dynamic project fields
   const {
     fields: projectFields,
     append: addProject,
-    remove: removeProject
+    remove: removeProject,
   } = useFieldArray({
     control,
-    name: "projects"
+    name: "projects",
   });
 
   // Dynamic certification fields
   const {
     fields: certificationFields,
     append: addCertification,
-    remove: removeCertification
+    remove: removeCertification,
   } = useFieldArray({
     control,
-    name: "certifications"
+    name: "certifications",
   });
 
   useEffect(() => {
@@ -111,7 +106,7 @@ function Details() {
     ["institution", "degree", "startYear", "endYear"],
     ["skills"],
     [],
-    []
+    [],
   ];
 
   // Remove completely empty entries before saving
@@ -148,9 +143,7 @@ function Details() {
     }
 
     if (activeStep === 4) {
-      dispatch(
-        updateProjects(cleanEntries(values.projects || []))
-      );
+      dispatch(updateProjects(cleanEntries(values.projects || [])));
     }
 
     if (activeStep === 5) {
@@ -172,19 +165,19 @@ function Details() {
       valid = await trigger(fields[activeStep]);
     }
 
-    // Validate Projects
+    // Validate Projects (project name + project link)
     if (activeStep === 4) {
       const projects = getValues("projects") || [];
 
-      const projectNameFields = projects.map(
-        (_, index) => `projects.${index}.name`
-      );
+      const projectValidationFields = projects.flatMap((_, index) => [
+        `projects.${index}.name`,
+        `projects.${index}.link`,
+      ]);
 
-      if (projectNameFields.length > 0) {
-        valid = await trigger(projectNameFields);
+      if (projectValidationFields.length > 0) {
+        valid = await trigger(projectValidationFields);
       }
     }
-
     // Validate Certifications
     if (activeStep === 5) {
       const certifications = getValues("certifications") || [];
@@ -194,16 +187,19 @@ function Details() {
 
         setError("certifications", {
           type: "required",
-          message: "Please add at least one certification."
+          message: "Please add at least one certification.",
         });
       } else {
         clearErrors("certifications");
 
-        const certificationNameFields = certifications.map(
-          (_, index) => `certifications.${index}.name`
+        const certificationValidationFields = certifications.flatMap(
+          (_, index) => [
+            `certifications.${index}.name`,
+            `certifications.${index}.link`,
+          ]
         );
 
-        valid = await trigger(certificationNameFields);
+        valid = await trigger(certificationValidationFields);
       }
     }
 
@@ -248,7 +244,7 @@ function Details() {
       multiline={multiline}
       minRows={multiline ? 3 : 1}
       {...register(name, {
-        required: required ? `${label} is required` : false
+        required: required ? `${label} is required` : false,
       })}
       error={!!errors[name]}
       helperText={errors[name]?.message}
@@ -275,9 +271,9 @@ function Details() {
 
         <Typography
           sx={{
-            textalign: "center",
+            textAlign: "center",
             color: "text.secondary",
-            mb: 5
+            mb: 5,
           }}
         >
           Fill in your information to build your professional resume.
@@ -287,25 +283,20 @@ function Details() {
           elevation={3}
           sx={{
             p: { xs: 2, md: 5 },
-            borderRadius: 3
+            borderRadius: 3,
           }}
         >
-          <Stepper
-            activeStep={activeStep}
-            alternativeLabel
-            sx={{ mb: 5 }}
-          >
-            {steps.map((step) => (
-              <Step key={step}>
-                <StepLabel>{step}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-
           <Box
             component="form"
             onSubmit={(e) => e.preventDefault()}
           >
+            <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 5 }}>
+              {steps.map((step) => (
+                <Step key={step}>
+                  <StepLabel>{step}</StepLabel>
+                </Step>
+              ))}
+            </Stepper>
 
             {/* STEP 1: PERSONAL INFORMATION */}
             {activeStep === 0 && (
@@ -332,8 +323,8 @@ function Details() {
                         required: "Email is required",
                         pattern: {
                           value: /^\S+@\S+\.\S+$/,
-                          message: "Enter a valid email"
-                        }
+                          message: "Enter a valid email",
+                        },
                       })}
                       error={!!errors.email}
                       helperText={errors.email?.message}
@@ -342,7 +333,29 @@ function Details() {
                   </Grid>
 
                   <Grid size={{ xs: 12, md: 6 }}>
-                    {renderField("phone", "Phone Number")}
+                    <TextField
+                      fullWidth
+                      label="Phone Number"
+                      placeholder="Enter your phone number"
+                      {...register("phone", {
+                        required: "Phone number is required",
+                        pattern: {
+                          value: /^\+?[0-9\s-]+$/,
+                          message: "Enter a valid phone number",
+                        },
+                        validate: (value) => {
+                          const digits = value.replace(/\D/g, "");
+
+                          return (
+                            digits.length === 10 ||
+                            "Phone number must contain 10 digits"
+                          );
+                        },
+                      })}
+                      error={!!errors.phone}
+                      helperText={errors.phone?.message}
+                      sx={{ mb: 3 }}
+                    />
                   </Grid>
 
                   <Grid size={{ xs: 12 }}>
@@ -373,11 +386,36 @@ function Details() {
 
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    {renderField("startDate", "Start Date")}
+                    <TextField
+                      fullWidth
+                      label="Start Date"
+                      type="date"
+                      InputLabelProps={{ shrink: true }}
+                      {...register("startDate", {
+                        required: "Start date is required",
+                      })}
+                      error={!!errors.startDate}
+                      helperText={errors.startDate?.message}
+                      sx={{ mb: 3 }}
+                    />
                   </Grid>
 
                   <Grid size={{ xs: 12, md: 6 }}>
-                    {renderField("endDate", "End Date")}
+                    <TextField
+                      fullWidth
+                      label="End Date"
+                      type="date"
+                      InputLabelProps={{ shrink: true }}
+                      {...register("endDate", {
+                        required: "End date is required",
+                        validate: (value) =>
+                          value >= getValues("startDate") ||
+                          "End date cannot be before Start date",
+                      })}
+                      error={!!errors.endDate}
+                      helperText={errors.endDate?.message}
+                      sx={{ mb: 3 }}
+                    />
                   </Grid>
                 </Grid>
 
@@ -402,11 +440,42 @@ function Details() {
 
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    {renderField("startYear", "Start Year")}
+                    <TextField
+                      fullWidth
+                      label="Start Year"
+                      placeholder="e.g. 2022"
+                      {...register("startYear", {
+                        required: "Start year is required",
+                        pattern: {
+                          value: /^\d{4}$/,
+                          message: "Enter a valid 4-digit year",
+                        },
+                      })}
+                      error={!!errors.startYear}
+                      helperText={errors.startYear?.message}
+                      sx={{ mb: 3 }}
+                    />
                   </Grid>
 
                   <Grid size={{ xs: 12, md: 6 }}>
-                    {renderField("endYear", "End Year")}
+                    <TextField
+                      fullWidth
+                      label="End Year"
+                      placeholder="e.g. 2026"
+                      {...register("endYear", {
+                        required: "End year is required",
+                        pattern: {
+                          value: /^\d{4}$/,
+                          message: "Enter a valid 4-digit year",
+                        },
+                        validate: (value) =>
+                          Number(value) >= Number(getValues("startYear")) ||
+                          "End year must be after Start year",
+                      })}
+                      error={!!errors.endYear}
+                      helperText={errors.endYear?.message}
+                      sx={{ mb: 3 }}
+                    />
                   </Grid>
                 </Grid>
               </>
@@ -433,7 +502,7 @@ function Details() {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    mb: 2
+                    mb: 2,
                   }}
                 >
                   {skillsValue
@@ -486,7 +555,7 @@ function Details() {
                       fullWidth
                       label="Project Name"
                       {...register(`projects.${index}.name`, {
-                        required: "Project name is required"
+                        required: "Project name is required",
                       })}
                       error={!!errors.projects?.[index]?.name}
                       helperText={errors.projects?.[index]?.name?.message}
@@ -514,7 +583,23 @@ function Details() {
                       fullWidth
                       label="Project Link"
                       placeholder="https://example.com"
-                      {...register(`projects.${index}.link`)}
+                      {...register(`projects.${index}.link`, {
+                        validate: (value) => {
+                          if (!value || value.trim() === "") {
+                            return "Certificate link is required";
+                          }
+
+                          const urlPattern =
+                            /^https?:\/\/(?:[\w-]+\.)+[\w-]+(?:\/[^\s]*)?$/i;
+
+                          return (
+                            urlPattern.test(value.trim()) ||
+                            "Please enter a valid certificate URL (https://...)"
+                          );
+                        },
+                      })}
+                      error={!!errors.projects?.[index]?.link}
+                      helperText={errors.projects?.[index]?.link?.message}
                     />
                   </Paper>
                 ))}
@@ -527,7 +612,7 @@ function Details() {
                       name: "",
                       technologies: "",
                       description: "",
-                      link: ""
+                      link: "",
                     })
                   }
                 >
@@ -576,7 +661,7 @@ function Details() {
                       fullWidth
                       label="Certificate Name"
                       {...register(`certifications.${index}.name`, {
-                        required: "Certificate name is required"
+                        required: "Certificate name is required",
                       })}
                       error={!!errors.certifications?.[index]?.name}
                       helperText={
@@ -606,7 +691,23 @@ function Details() {
                       fullWidth
                       label="Certificate Link"
                       placeholder="https://example.com"
-                      {...register(`certifications.${index}.link`)}
+                      {...register(`certifications.${index}.link`, {
+                        validate: (value) => {
+                          if (!value || value.trim() === "") {
+                            return "Certificate link is required";
+                          }
+
+                          const urlPattern =
+                            /^https?:\/\/(?:[\w-]+\.)+[\w-]+(?:\/[^\s]*)?$/i;
+
+                          return (
+                            urlPattern.test(value.trim()) ||
+                            "Please enter a valid certificate URL (https://...)"
+                          );
+                        },
+                      })}
+                      error={!!errors.certifications?.[index]?.link}
+                      helperText={errors.certifications?.[index]?.link?.message}
                     />
                   </Paper>
                 ))}
@@ -621,7 +722,7 @@ function Details() {
                       name: "",
                       organization: "",
                       date: "",
-                      link: ""
+                      link: "",
                     });
                   }}
                 >
@@ -644,7 +745,7 @@ function Details() {
               sx={{
                 display: "flex",
                 justifyContent: "space-between",
-                mt: 4
+                mt: 4,
               }}
             >
               <Button
@@ -661,15 +762,12 @@ function Details() {
                 onClick={handleNext}
                 sx={{
                   backgroundColor: "#2563eb",
-                  px: 4
+                  px: 4,
                 }}
               >
-                {activeStep === 5
-                  ? "Preview Resume"
-                  : "Next"}
+                {activeStep === 5 ? "Preview Resume" : "Next"}
               </Button>
             </Box>
-
           </Box>
         </Paper>
       </Container>

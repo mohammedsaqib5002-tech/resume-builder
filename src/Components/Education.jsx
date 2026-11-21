@@ -33,9 +33,13 @@ function Education() {
         <input
           type="text"
           name="degree"
+          aria-label="Degree or qualification"
           placeholder="Degree / Qualification"
+          min={education.startYear || 1900}
+          max={new Date().getFullYear() + 10}
           value={education.degree}
           onChange={handleChange}
+          minLength={2}
           required
         />
 

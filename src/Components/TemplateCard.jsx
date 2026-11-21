@@ -10,8 +10,6 @@ import {
 
 import { useNavigate } from "react-router-dom";
 
-import DescriptionIcon from "@mui/icons-material/Description";
-
 function TemplateCard({ template }) {
   const navigate = useNavigate();
 
@@ -31,19 +29,20 @@ function TemplateCard({ template }) {
       <Box
         sx={{
           height: 260,
-          backgroundColor: template.color,
+          backgroundColor: template.color || "#e5e7eb",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
           position: "relative",
           p: 3,
-          "&:hover .use-button": {
-            opacity: 1
-          }
+          "&:hover .use-button, &:focus-within .use-button": {
+  opacity: 1
+}
         }}
       >
         {/* Resume Preview */}
         <Box
+        aria-label={`Preview of ${template.name} resume template`}
           sx={{
             width: "70%",
             height: "220px",
@@ -55,7 +54,7 @@ function TemplateCard({ template }) {
         >
           <Box
             sx={{
-              backgroundColor: template.accent,
+              backgroundColor: template.accent || "#2563eb",
               height: 12,
               mb: 2,
               borderRadius: 1
@@ -96,7 +95,10 @@ function TemplateCard({ template }) {
           sx={{
             position: "absolute",
             opacity: { xs: 1, md: 0 },
-            transition: "0.3s",
+            transition: "opacity 0.3s ease",
+            "&:focus-visible": {
+              opacity: 1
+            },
             backgroundColor: "#2563eb",
             "&:hover": {
               backgroundColor: "#1d4ed8"

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 
 import {
     Container,
@@ -16,6 +16,8 @@ import TemplateCard from "../Components/TemplateCard";
 import templates from "../Data/Data";
 
 function Home() {
+    const templatesRef = useRef(null);
+
     return (
         <>
             <Header />
@@ -31,6 +33,7 @@ function Home() {
                 <Container maxWidth="md">
 
                     <Typography
+                        id="templates-heading"
                         variant="h2"
                         fontWeight="bold"
                         sx={{
@@ -58,11 +61,11 @@ function Home() {
 
                     <Button
                         variant="contained"
+                        aria-controls="templates"
                         size="large"
                         endIcon={<ArrowForwardIcon />}
                         onClick={() =>
-                            document.getElementById("templates")
-                                ?.scrollIntoView({ behavior: "smooth" })
+                            templatesRef.current?.scrollIntoView({ behavior: "smooth" })
                         }
                         sx={{
                             backgroundColor: "#2563eb",
@@ -84,7 +87,9 @@ function Home() {
 
             {/* Templates Section */}
             <Container
+                ref = {templatesRef}
                 id="templates"
+                ariatempletedby ="template-heading"
                 maxWidth="lg"
                 sx={{ py: 8 }}
             >
@@ -92,6 +97,7 @@ function Home() {
                 <Box sx={{ textAlign: "center", mb: 5 }}>
                     <Typography
                         variant="h4"
+                        component="h1"
                         fontWeight="bold"
                         color="#172554"
                     >
@@ -106,7 +112,7 @@ function Home() {
                     </Typography>
                 </Box>
 
-                <Grid container spacing={4}>
+                <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
                     {templates.map((template) => (
                         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={template.id}>
                             <TemplateCard template={template} />

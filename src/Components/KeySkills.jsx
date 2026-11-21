@@ -14,7 +14,11 @@ function KeySkills() {
 
     if (!trimmedSkill) return;
 
-    if (skills.includes(trimmedSkill)) {
+    if (
+      skills.some(
+        (item) => item.toLowerCase() === trimmedSkill.toLowerCase()
+      )
+    ) {
       alert("Skill already exists!");
       return;
     }
@@ -37,11 +41,18 @@ function KeySkills() {
 
       <input
         type="text"
+        aria-label="Enter a key skill"
         placeholder="Enter a skill"
         value={skill}
+        maxLength={40}
         onChange={(e) => setSkill(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            addSkill();
+          }
+        }}
       />
-
       <button type="button" onClick={addSkill}>
         Add Skill
       </button>
@@ -50,8 +61,10 @@ function KeySkills() {
         {skills.map((item, index) => (
           <li key={`${item}-${index}`}>
             {item}
+
             <button
               type="button"
+              aria-label={`Remove ${item} skill`}
               onClick={() => removeSkill(item)}
             >
               Remove

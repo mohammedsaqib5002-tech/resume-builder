@@ -79,7 +79,9 @@ describe("KeySkills Component", () => {
       </Provider>
     );
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Remove" })[0]);
+    fireEvent.click(
+  screen.getByRole("button", { name: "Remove React skill" })
+);
 
     expect(store.getState().resume.skills).toEqual(["JavaScript"]);
   });
