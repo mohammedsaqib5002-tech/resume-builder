@@ -729,16 +729,26 @@ function Details() {
                 <Button
                   type="button"
                   variant="outlined"
-                  onClick={() => {
-                    clearErrors("certifications");
+                   onClick={() => {
+                 const currentCertifications = getValues("certifications");
 
-                    addCertification({
-                      name: "",
-                      organization: "",
-                      date: "",
-                      link: "",
-                    });
-                  }}
+                 const hasEmptyCertification = currentCertifications?.some(
+                 (certification) => !certification.name?.trim()
+                  );      
+
+                  if (hasEmptyCertification) {
+                    return;
+                  }
+
+                   clearErrors("certifications");
+
+                   addCertification({
+                    name: "",
+                    organization: "",
+                   date: "",
+                   link: "",
+                   });
+                   }}
                 >
                   + Add Certification
                 </Button>
