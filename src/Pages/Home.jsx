@@ -33,7 +33,8 @@ function Home() {
                 <Container maxWidth="md">
 
                     <Typography
-                        id="templates-heading"
+                        component="h1"
+                        id="hero-heading"
                         variant="h2"
                         fontWeight="bold"
                         sx={{
@@ -89,7 +90,7 @@ function Home() {
             <Container
                 ref = {templatesRef}
                 id="templates"
-                ariatempletedby ="template-heading"
+                aria-labelledby="template-heading"
                 maxWidth="lg"
                 sx={{ py: 8 }}
             >
@@ -97,6 +98,7 @@ function Home() {
                 <Box sx={{ textAlign: "center", mb: 5 }}>
                     <Typography
                         variant="h4"
+                        id="template-heading"
                         component="h1"
                         fontWeight="bold"
                         color="#172554"
