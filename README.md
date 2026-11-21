@@ -20,7 +20,7 @@ https://github.com/mohammedsaqib5002-tech/resume-builder
 
 ### Home Page
 
-![Resume Builder Home Page](./Screenschots/home.png)
+![Resume Builder Home Page](Screenschots/home.png)
 
 ## 📌 Project Overview
 
