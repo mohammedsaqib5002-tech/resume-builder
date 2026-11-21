@@ -563,7 +563,9 @@ function Preview() {
 
               {/* Certifications */}
               {certifications.length > 0 && (
-                <Box mb={4}>
+                <Box mb={4}
+                  sx={{ breakBefore: "page", pageBreakBefore: "always" }}
+                >
                   <SectionHeading>CERTIFICATIONS</SectionHeading>
 
                   {certifications.map((certificate, index) => (
