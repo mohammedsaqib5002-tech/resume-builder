@@ -47,19 +47,19 @@ function ResumeHeader({ personalInfo, accent }) {
       >
         {personalInfo.email && (
           <Typography fontSize={12}>
-            âœ‰ {personalInfo.email}
+            Email: {personalInfo.email}
           </Typography>
         )}
 
         {personalInfo.phone && (
           <Typography fontSize={12}>
-            â˜Ž {personalInfo.phone}
+            Phone: {personalInfo.phone}
           </Typography>
         )}
 
         {personalInfo.address && (
           <Typography fontSize={12}>
-            ðŸ“ {personalInfo.address}
+            Location: {personalInfo.address}
           </Typography>
         )}
       </Box>
