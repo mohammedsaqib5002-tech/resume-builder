@@ -8,7 +8,7 @@ function CertificationsPreview({ certifications, accent }) {
   }
 
   return (
-    <Box mb={4} className="pdf-page-start">
+    <Box mb={4} >
       <SectionHeading accent={accent}>
         CERTIFICATIONS
       </SectionHeading>
