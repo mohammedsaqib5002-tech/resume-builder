@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+﻿import { useRef } from "react";
 
 import {
     Container,
@@ -134,7 +134,7 @@ function Home() {
                 }}
             >
                 <Typography variant="body2">
-                    © 2026 ResumeBuilder. All Rights Reserved.
+                    Â© 2026 ResumeBuilder. All Rights Reserved.
                 </Typography>
             </Box>
         </>

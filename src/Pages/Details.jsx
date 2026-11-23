@@ -1,24 +1,27 @@
-
-import React, { useEffect, useState } from "react";
+﻿
+import { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-
+import { DETAILS_STEPS, STEP_FIELDS } from "../Data/DetailsConfig";
+import FormField from "../Components/FormField";
+import ProjectsStep from "../Components/ProjectsStep";
+import CertificationsStep from "../Components/CertificationsStep";
+import PersonalInfoStep from "../Components/PersonalInfoStep";
+import WorkExperienceStep from "../Components/WorkExperienceStep";
+import EducationStep from "../Components/EducationStep";
+import SkillsStep from "../Components/SkillsStep";
+import StepNavigation from "../Components/StepNavigation";
 import {
   Box,
   Container,
   Typography,
-  TextField,
-  Button,
   Paper,
   Stepper,
   Step,
   StepLabel,
-  Grid,
-  Chip,
   Divider,
 } from "@mui/material";
-
 import {
   updatePersonalInfo,
   updateWorkExperience,
@@ -31,14 +34,7 @@ import {
 
 import Header from "../Components/Header";
 
-const steps = [
-  "Personal Info",
-  "Work Experience",
-  "Education",
-  "Key Skills",
-  "Projects",
-  "Certifications",
-];
+const steps = DETAILS_STEPS;
 
 function Details() {
   const [activeStep, setActiveStep] = useState(0);
@@ -67,9 +63,11 @@ function Details() {
       projects: (resume.projects || []).map((project) => ({
         ...project,
       })),
-      certifications: (resume.certifications || []).map((certification) => ({
-        ...certification,
-      })),
+      certifications: (resume.certifications || []).map(
+        (certification) => ({
+          ...certification,
+        })
+      ),
     },
   });
 
@@ -100,14 +98,7 @@ function Details() {
   }, [templateId, dispatch]);
 
   // Fields to validate for each step
-  const fields = [
-    ["fullName", "email", "phone", "address", "jobTitle"],
-    ["company", "position", "startDate", "endDate"],
-    ["institution", "degree", "startYear", "endYear"],
-    ["skills"],
-    [],
-    [],
-  ];
+  const fields = STEP_FIELDS;
 
   // Remove completely empty entries before saving
   const cleanEntries = (entries) =>
@@ -159,8 +150,7 @@ function Details() {
   const handleNext = async () => {
     let valid = true;
 
-    // Validate Personal Info, Work Experience,
-    // Education and Skills
+    // Validate Personal Info, Work Experience, Education and Skills
     if (activeStep >= 0 && activeStep <= 3) {
       valid = await trigger(fields[activeStep]);
     }
@@ -169,15 +159,18 @@ function Details() {
     if (activeStep === 4) {
       const projects = getValues("projects") || [];
 
-      const projectValidationFields = projects.flatMap((_, index) => [
-        `projects.${index}.name`,
-        `projects.${index}.link`,
-      ]);
+      const projectValidationFields = projects.flatMap(
+        (_, index) => [
+          `projects.${index}.name`,
+          `projects.${index}.link`,
+        ]
+      );
 
       if (projectValidationFields.length > 0) {
         valid = await trigger(projectValidationFields);
       }
     }
+
     // Validate Certifications
     if (activeStep === 5) {
       const certifications = getValues("certifications") || [];
@@ -192,12 +185,11 @@ function Details() {
       } else {
         clearErrors("certifications");
 
-        const certificationValidationFields = certifications.flatMap(
-          (_, index) => [
+        const certificationValidationFields =
+          certifications.flatMap((_, index) => [
             `certifications.${index}.name`,
             `certifications.${index}.link`,
-          ]
-        );
+          ]);
 
         valid = await trigger(certificationValidationFields);
       }
@@ -231,32 +223,15 @@ function Details() {
     }
   };
 
-  // Reusable form field
-  const renderField = (
-    name,
-    label,
-    required = true,
-    multiline = false
-  ) => (
-    <TextField
-      fullWidth
+  // Reusable form field component
+  const renderField = (name, label, required = true, multiline = false) => (
+    <FormField
+      name={name}
       label={label}
+      register={register}
+      errors={errors}
+      required={required}
       multiline={multiline}
-      minRows={multiline ? 3 : 1}
-     {...register(name, {
-  required: required ? `${label} is required` : false,
-  validate:
-    name === "skills"
-      ? (value) =>
-          value
-            .split(",")
-            .some((skill) => skill.trim() !== "") ||
-          "Enter at least one valid skill"
-      : undefined,
-})}
-      error={!!errors[name]}
-      helperText={errors[name]?.message}
-      sx={{ mb: 3 }}
     />
   );
 
@@ -306,495 +281,75 @@ function Details() {
               ))}
             </Stepper>
 
-            {/* STEP 1: PERSONAL INFORMATION */}
             {activeStep === 0 && (
-              <>
-                <Typography variant="h5" fontWeight="bold" mb={3}>
-                  Personal Information
-                </Typography>
-
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    {renderField("fullName", "Full Name")}
-                  </Grid>
-
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    {renderField("jobTitle", "Job Title")}
-                  </Grid>
-
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField
-                      fullWidth
-                      label="Email"
-                      type="email"
-                      {...register("email", {
-                        required: "Email is required",
-                        pattern: {
-                          value: /^\+?[0-9](?:[0-9\s-]*[0-9])?$/,
-                          message: "Enter a valid email",
-                        },
-                      })}
-                      error={!!errors.email}
-                      helperText={errors.email?.message}
-                      sx={{ mb: 3 }}
-                    />
-                  </Grid>
-
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField
-                      fullWidth
-                      label="Phone Number"
-                      placeholder="Enter your phone number"
-                      {...register("phone", {
-                        required: "Phone number is required",
-                        pattern: {
-                          value: /^\+?[0-9\s-]+$/,
-                          message: "Enter a valid phone number",
-                        },
-                        validate: (value) => {
-                          const digits = value.replace(/\D/g, "");
-
-                          return (
-                            digits.length === 10 ||
-                            "Phone number must contain 10 digits"
-                          );
-                        },
-                      })}
-                      error={!!errors.phone}
-                      helperText={errors.phone?.message}
-                      sx={{ mb: 3 }}
-                    />
-                  </Grid>
-
-                  <Grid size={{ xs: 12 }}>
-                    {renderField("address", "Address")}
-                  </Grid>
-
-                  <Grid size={{ xs: 12 }}>
-                    {renderField(
-                      "summary",
-                      "Professional Summary",
-                      false,
-                      true
-                    )}
-                  </Grid>
-                </Grid>
-              </>
+              <PersonalInfoStep
+                renderField={renderField}
+                fields={fields}
+              />
             )}
 
-            {/* STEP 2: WORK EXPERIENCE */}
             {activeStep === 1 && (
-              <>
-                <Typography variant="h5" fontWeight="bold" mb={3}>
-                  Work Experience
-                </Typography>
-
-                {renderField("company", "Company Name")}
-                {renderField("position", "Job Position")}
-
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField
-                      fullWidth
-                      label="Start Date"
-                      type="date"
-                      InputLabelProps={{ shrink: true }}
-                      {...register("startDate", {
-                        required: "Start date is required",
-                      })}
-                      error={!!errors.startDate}
-                      helperText={errors.startDate?.message}
-                      sx={{ mb: 3 }}
-                    />
-                  </Grid>
-
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField
-                      fullWidth
-                      label="End Date"
-                      type="date"
-                      InputLabelProps={{ shrink: true }}
-                      {...register("endDate", {
-                        required: "End date is required",
-                        validate: (value) =>
-                          value >= getValues("startDate") ||
-                          "End date cannot be before Start date",
-                      })}
-                      error={!!errors.endDate}
-                      helperText={errors.endDate?.message}
-                      sx={{ mb: 3 }}
-                    />
-                  </Grid>
-                </Grid>
-
-                {renderField(
-                  "description",
-                  "Work Description",
-                  false,
-                  true
-                )}
-              </>
+              <WorkExperienceStep
+                renderField={renderField}
+                register={register}
+                errors={errors}
+                getValues={getValues}
+              />
             )}
 
-            {/* STEP 3: EDUCATION */}
             {activeStep === 2 && (
-              <>
-                <Typography variant="h5" fontWeight="bold" mb={3}>
-                  Education Details
-                </Typography>
-
-                {renderField("institution", "Institution Name")}
-                {renderField("degree", "Degree / Qualification")}
-
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField
-                      fullWidth
-                      label="Start Year"
-                      placeholder="e.g. 2022"
-                      {...register("startYear", {
-                        required: "Start year is required",
-                        pattern: {
-                         value: /^\d{4}$/,
-                         message: "Enter a valid 4-digit year",
-                       },
-                       validate: (value) =>
-                       Number(value) <= new Date().getFullYear() ||
-                       "Start year cannot be in the future",
-                      })}
-                      error={!!errors.startYear}
-                      helperText={errors.startYear?.message}
-                      sx={{ mb: 3 }}
-                    />
-                  </Grid>
-
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField
-                      fullWidth
-                      label="End Year"
-                      placeholder="e.g. 2026"
-                      {...register("endYear", {
-                        required: "End year is required",
-                        validate: (value) => {
-                          if (Number(value) > new Date().getFullYear()) {
-                            return "End year cannot be in the future";
-                          }
-
-                         return (
-                            Number(value) >= Number(getValues("startYear")) ||
-                            "End year must be after Start year"
-                       );
-                       },
-                      })}
-                      error={!!errors.endYear}
-                      helperText={errors.endYear?.message}
-                      sx={{ mb: 3 }}
-                    />
-                  </Grid>
-                </Grid>
-              </>
+              <EducationStep
+                renderField={renderField}
+                register={register}
+                errors={errors}
+                getValues={getValues}
+              />
             )}
 
-            {/* STEP 4: KEY SKILLS */}
             {activeStep === 3 && (
-              <>
-                <Typography variant="h5" fontWeight="bold" mb={2}>
-                  Key Skills
-                </Typography>
-
-                <Typography color="text.secondary" mb={3}>
-                  Enter your skills separated by commas.
-                </Typography>
-
-                {renderField(
-                  "skills",
-                  "Example: React, JavaScript, HTML, CSS"
-                )}
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 2,
-                  }}
-                >
-                  {skillsValue
-                    ?.split(",")
-                    .filter((skill) => skill.trim())
-                    .map((skill, index) => (
-                      <Chip key={index} label={skill.trim()} />
-                    ))}
-                </Box>
-              </>
+              <SkillsStep
+                register={register}
+                skillsValue={skillsValue}
+              />
+            )}
+          
+            {activeStep === 4 && (
+              <ProjectsStep
+                projectFields={projectFields}
+                register={register}
+                errors={errors}
+                getValues={getValues}
+                addProject={addProject}
+                removeProject={removeProject}
+              />
             )}
 
-            {/* STEP 5: PROJECTS */}
-            {activeStep === 4 && (
-              <>
-                <Typography variant="h5" fontWeight="bold" mb={1}>
-                  Projects
-                </Typography>
 
-                <Typography color="text.secondary" mb={3}>
-                  Add your personal, academic or professional projects.
-                </Typography>
-
-                {projectFields.map((field, index) => (
-                  <Paper
-                    key={field.id}
-                    variant="outlined"
-                    sx={{ p: 3, mb: 3, borderRadius: 2 }}
-                  >
-                    <Box
-                      display="flex"
-                      justifyContent="space-between"
-                      alignItems="center"
-                      mb={2}
-                    >
-                      <Typography fontWeight="bold">
-                        Project {index + 1}
-                      </Typography>
-
-                      <Button
-                        type="button"
-                        color="error"
-                        onClick={() => removeProject(index)}
-                      >
-                        Remove
-                      </Button>
-                    </Box>
-
-                    <TextField
-                      fullWidth
-                      label="Project Name"
-                      {...register(`projects.${index}.name`, {
-                        required: "Project name is required",
-                      })}
-                      error={!!errors.projects?.[index]?.name}
-                      helperText={errors.projects?.[index]?.name?.message}
-                      sx={{ mb: 3 }}
-                    />
-
-                    <TextField
-                      fullWidth
-                      label="Technologies Used"
-                      placeholder="React, JavaScript, MongoDB"
-                      {...register(`projects.${index}.technologies`)}
-                      sx={{ mb: 3 }}
-                    />
-
-                    <TextField
-                      fullWidth
-                      multiline
-                      minRows={3}
-                      label="Project Description"
-                      {...register(`projects.${index}.description`)}
-                      sx={{ mb: 3 }}
-                    />
-
-                    <TextField
-                      fullWidth
-                      label="Project Link"
-                      placeholder="https://example.com"
-                     {...register(`projects.${index}.link`, {
-                      required: "Project link is required",
-                      validate: (value) => {
-                    if (!value || value.trim() === "") {
-                       return "Project link is required";
-                   }
-
-                const urlPattern =
-                   /^https?:\/\/(?:[\w-]+\.)+[\w-]+(?:\/[^\s]*)?$/i;
-
-                return (
-                   urlPattern.test(value.trim()) ||
-                   "Please enter a valid project URL (https://...)"
-               );
-               },
-               })}
-                <Button
-                  type="button"
-                  variant="outlined"
-                  onClick={() => {
-                   const currentProjects = getValues("projects");
-
-                  const hasEmptyProject = currentProjects?.some(
-                    (project) => !project.name?.trim()
-                   );
-
-                  if (hasEmptyProject) {
-                  return;
-                  }
-
-               addProject({
-                 name: "",
-                 technologies: "",
-                 description: "",
-                link: "",
-              });
-              }}
-            {/* STEP 6: CERTIFICATIONS */}
             {activeStep === 5 && (
-              <>
-                <Typography variant="h5" fontWeight="bold" mb={1}>
-                  Certifications
-                </Typography>
-
-                <Typography color="text.secondary" mb={3}>
-                  Add your professional courses and certificates.
-                </Typography>
-
-                {certificationFields.map((field, index) => (
-                  <Paper
-                    key={field.id}
-                    variant="outlined"
-                    sx={{ p: 3, mb: 3, borderRadius: 2 }}
-                  >
-                    <Box
-                      display="flex"
-                      justifyContent="space-between"
-                      alignItems="center"
-                      mb={2}
-                    >
-                      <Typography fontWeight="bold">
-                        Certification {index + 1}
-                      </Typography>
-
-                      <Button
-                        type="button"
-                        color="error"
-                        onClick={() => removeCertification(index)}
-                      >
-                        Remove
-                      </Button>
-                    </Box>
-
-                    <TextField
-                      fullWidth
-                      label="Certificate Name"
-                      {...register(`certifications.${index}.name`, {
-                        required: "Certificate name is required",
-                      })}
-                      error={!!errors.certifications?.[index]?.name}
-                      helperText={
-                        errors.certifications?.[index]?.name?.message
-                      }
-                      sx={{ mb: 3 }}
-                    />
-
-                    <TextField
-                      fullWidth
-                      label="Issuing Organization"
-                      {...register(
-                        `certifications.${index}.organization`
-                      )}
-                      sx={{ mb: 3 }}
-                    />
-
-                    <TextField
-                      fullWidth
-                      label="Issue Date"
-                      placeholder="November 2026"
-                      {...register(`certifications.${index}.date`)}
-                      sx={{ mb: 3 }}
-                    />
-
-                    <TextField
-                      fullWidth
-                      label="Certificate Link"
-                      placeholder="https://example.com"
-                     {...register(`certifications.${index}.link`, {
-                     required: "Certificate link is required",
-                     validate: (value) => {
-                    if (!value || value.trim() === "") {
-                    return "Certificate link is required";
-                     }
-
-                    const urlPattern =
-                    /^https?:\/\/(?:[\w-]+\.)+[\w-]+(?:\/[^\s]*)?$/i;
-
-                     return (
-                     urlPattern.test(value.trim()) ||
-                      "Please enter a valid certificate URL (https://...)"
-                      );
-                      },
-                      })}
-                      error={!!errors.certifications?.[index]?.link}
-                      helperText={errors.certifications?.[index]?.link?.message}
-                    />
-                  </Paper>
-                ))}
-
-                <Button
-                  type="button"
-                  variant="outlined"
-                   onClick={() => {
-                 const currentCertifications = getValues("certifications");
-
-                 const hasEmptyCertification = currentCertifications?.some(
-                 (certification) => !certification.name?.trim()
-                  );      
-
-                  if (hasEmptyCertification) {
-                    return;
-                  }
-
-                   clearErrors("certifications");
-
-                   addCertification({
-                    name: "",
-                    organization: "",
-                   date: "",
-                   link: "",
-                   });
-                   }}
-                >
-                  + Add Certification
-                </Button>
-
-                {errors.certifications?.message && (
-                  <Typography color="error" sx={{ mt: 2 }}>
-                    {errors.certifications.message}
-                  </Typography>
-                )}
-              </>
+              <CertificationsStep
+                certificationFields={certificationFields}
+                register={register}
+                errors={errors}
+                getValues={getValues}
+                addCertification={addCertification}
+                removeCertification={removeCertification}
+                clearErrors={clearErrors}
+              />
             )}
 
             {/* DIVIDER */}
             <Divider sx={{ my: 3 }} />
 
             {/* NAVIGATION BUTTONS - OUTSIDE ALL STEP CONDITIONS */}
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                mt: 4,
-              }}
-            >
-              <Button
-                type="button"
-                variant="outlined"
-                onClick={handleBack}
-              >
-                Back
-              </Button>
-
-              <Button
-                type="button"
-                variant="contained"
-                onClick={handleNext}
-                sx={{
-                  backgroundColor: "#2563eb",
-                  px: 4,
-                }}
-              >
-                {activeStep === 5 ? "Preview Resume" : "Next"}
-              </Button>
-            </Box>
+            <StepNavigation
+              activeStep={activeStep}
+              stepsLength={steps.length}
+              handleBack={handleBack}
+              handleNext={handleNext}
+            />
           </Box>
         </Paper>
-      </Container>
+      </Container >
     </>
   );
 }

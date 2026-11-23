@@ -1,5 +1,5 @@
-
-import React, { useRef, useState } from "react";
+﻿
+import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -11,26 +11,28 @@ import {
   Button,
   Paper,
   Divider,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   CircularProgress,
 } from "@mui/material";
 
 import DownloadIcon from "@mui/icons-material/Download";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 import Header from "../Components/Header";
+import DownloadSuccessDialog from "../Components/DownloadSuccessDialog";
+import ResumeHeader from "../Components/ResumeHeader";
+import ProfessionalSummary from "../Components/ProfessionalSummary";
+import WorkExperiencePreview from "../Components/WorkExperiencePreview";
+import EducationPreview from "../Components/EducationPreview";
+import KeySkillsPreview from "../Components/KeySkillsPreview";
+import ProjectsPreview from "../Components/ProjectsPreview";
+import CertificationsPreview from "../Components/CertificationsPreview";
+
+import generateResumePDF from "../utilis/generateResumePDF.js";
 
 function Preview() {
   const navigate = useNavigate();
   const resumeRef = useRef(null);
 
-  // Redux data
+  // Retrieve resume data from Redux.
   const resume = useSelector((state) => state.resume || {});
 
   const {
@@ -43,12 +45,12 @@ function Preview() {
     certifications = [],
   } = resume;
 
-  // Local state
+  // Local state.
   const [resumeName, setResumeName] = useState("My Resume");
   const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Template colors
+  // Template accent colors.
   const colors = {
     1: "#2563eb",
     2: "#db2777",
@@ -58,8 +60,7 @@ function Preview() {
 
   const accent = colors[selectedTemplate] || "#2563eb";
 
-  // PDF DOWNLOAD
-
+  // Generate and download the resume PDF.
   const downloadPDF = async () => {
     if (!resumeName.trim()) {
       alert("Please enter a resume name.");
@@ -74,153 +75,7 @@ function Preview() {
     try {
       setLoading(true);
 
-      const canvas = await html2canvas(resumeRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-      });
-
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-
-      // Calculate the maximum image height for one A4 page.
-      const pagePixelHeight =
-        (canvas.width * pageHeight) / pageWidth;
-
-      // Find smaller blocks that should preferably stay together.
-      const resumeRect = resumeRef.current.getBoundingClientRect();
-      const scaleY = canvas.height / resumeRect.height;
-
-      const keepTogetherBlocks = Array.from(
-        resumeRef.current.querySelectorAll(
-          ".pdf-keep-together, .resume-entry"
-        )
-      )
-        .map((element) => {
-          const rect = element.getBoundingClientRect();
-
-          return {
-            top: (rect.top - resumeRect.top) * scaleY,
-            bottom: (rect.bottom - resumeRect.top) * scaleY,
-            height: rect.height * scaleY,
-          };
-        })
-        .filter((block) => block.height < pagePixelHeight);
-
-      // Detect sections that must begin on a new PDF page.
-     const forcedPageStarts = Array.from(
-      resumeRef.current.querySelectorAll(".pdf-page-start")
-     ).map((element) => {
-     const rect = element.getBoundingClientRect();
-
-     return (rect.top - resumeRect.top) * scaleY;
-    });
-
-
-      let startY = 0;
-      let pageNumber = 0;
-
-      while (startY < canvas.height) {
-        // Add top spacing to every page after the first.
-        const pageTopPadding =
-          pageNumber > 0 ? 24 * scaleY : 0;
-
-        const availablePageHeight =
-          pagePixelHeight - pageTopPadding;
-
-        let endY = Math.min(
-          startY + availablePageHeight,
-          canvas.height
-        );
-
-        // Force marked sections to begin on a new page.
-          const nextForcedPageStart = forcedPageStarts.find(
-         (position) => position > startY + 10 && position < endY
-         );
-
-if (nextForcedPageStart) {
-  endY = nextForcedPageStart;
-}
-
-        // Avoid splitting smaller sections and entries.
-        if (endY < canvas.height) {
-          const crossingBlock = keepTogetherBlocks
-            .filter(
-              (block) =>
-                block.top < endY &&
-                block.bottom > endY &&
-                block.height < availablePageHeight &&
-                block.top > startY + 80
-            )
-            .sort((a, b) => a.top - b.top)[0];
-
-          if (crossingBlock) {
-            endY = crossingBlock.top;
-          }
-        }
-
-        const sliceHeight = Math.ceil(endY - startY);
-
-        if (sliceHeight <= 0) {
-          break;
-        }
-
-        const pageCanvas = document.createElement("canvas");
-
-        pageCanvas.width = canvas.width;
-        pageCanvas.height = sliceHeight + pageTopPadding;
-
-        const context = pageCanvas.getContext("2d");
-
-        context.fillStyle = "#ffffff";
-        context.fillRect(
-          0,
-          0,
-          pageCanvas.width,
-          pageCanvas.height
-        );
-
-        context.drawImage(
-          canvas,
-          0,
-          startY,
-          canvas.width,
-          sliceHeight,
-          0,
-          pageTopPadding,
-          canvas.width,
-          sliceHeight
-        );
-
-        const pageImage = pageCanvas.toDataURL("image/png");
-
-        const imageHeight =
-          (pageCanvas.height * pageWidth) / canvas.width;
-
-        if (pageNumber > 0) {
-          pdf.addPage();
-        }
-
-        pdf.addImage(
-          pageImage,
-          "PNG",
-          0,
-          0,
-          pageWidth,
-          imageHeight
-        );
-
-        startY = endY;
-        pageNumber++;
-      }
-
-      const safeName = resumeName
-        .trim()
-        .replace(/[<>:"/\\|?*]/g, "_");
-
-      pdf.save(`${safeName}.pdf`);
+      await generateResumePDF(resumeRef.current, resumeName);
 
       setOpenModal(true);
     } catch (error) {
@@ -230,32 +85,6 @@ if (nextForcedPageStart) {
       setLoading(false);
     }
   };
-
-
-  // Section heading
-  const SectionHeading = ({ children }) => (
-    <Box>
-
-      <Typography
-        sx={{
-          fontSize: 15,
-          fontWeight: 800,
-          color: accent,
-          letterSpacing: 1.5,
-          mb: 1,
-        }}
-      >
-        {children}
-      </Typography>
-
-      <Divider
-        sx={{
-          borderColor: accent,
-          borderBottomWidth: 2,
-        }}
-      />
-    </Box>
-  );
 
   return (
     <>
@@ -277,7 +106,9 @@ if (nextForcedPageStart) {
           </Typography>
         </Box>
 
-        <Box className="pdf-keep-together"
+        {/* Main preview and download layout */}
+        <Box
+          className="pdf-keep-together"
           sx={{
             display: "grid",
             gridTemplateColumns: {
@@ -309,326 +140,44 @@ if (nextForcedPageStart) {
                 fontFamily: "Arial, sans-serif",
               }}
             >
-              {/* Personal information */}
-              <Box className="pdf-keep-together"
-                sx={{
-                  borderLeft: `7px solid ${accent}`,
-                  backgroundColor: `${accent}0D`,
-                  p: { xs: 2, md: 3 },
-                  mb: 4,
-                  borderRadius: "4px",
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontSize: { xs: 25, md: 32 },
-                    fontWeight: 800,
-                    color: accent,
-                    letterSpacing: 1,
-                    overflowWrap: "anywhere",
-                  }}
-                >
-                  {personalInfo.fullName || "Your Name"}
-                </Typography>
+              <ResumeHeader
+                personalInfo={personalInfo}
+                accent={accent}
+              />
 
-                <Typography
-                  sx={{
-                    fontSize: 16,
-                    fontWeight: 600,
-                    color: "#334155",
-                    mt: 1,
-                  }}
-                >
-                  {personalInfo.jobTitle || "Professional Title"}
-                </Typography>
+              <ProfessionalSummary
+                summary={personalInfo.summary}
+                accent={accent}
+              />
 
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 2,
-                    mt: 2,
-                  }}
-                >
-                  {personalInfo.email && (
-                    <Typography fontSize={12}>
-                      ✉ {personalInfo.email}
-                    </Typography>
-                  )}
-
-                  {personalInfo.phone && (
-                    <Typography fontSize={12}>
-                      ☎ {personalInfo.phone}
-                    </Typography>
-                  )}
-
-                  {personalInfo.address && (
-                    <Typography fontSize={12}>
-                      📍 {personalInfo.address}
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-
-              {/* Professional summary */}
-              {personalInfo.summary && (
-                <Box mb={4} className="pdf-keep-together">
-                  <SectionHeading>
-                    PROFESSIONAL SUMMARY
-                  </SectionHeading>
-
-                  <Typography
-                    fontSize={13}
-                    lineHeight={1.8}
-                    sx={{ whiteSpace: "pre-wrap" }}
-                  >
-                    {personalInfo.summary}
-                  </Typography>
-                </Box>
-              )}
-
-              {/* Work experience */}
-              {(workExperience.position ||
-                workExperience.company ||
-                workExperience.description) && (
-                  <Box mb={4} className="resume-section pdf-keep-together">
-                    <SectionHeading>
-                      WORK EXPERIENCE
-                    </SectionHeading>
-
-                    <Box
-                      className="resume-entry"
-                      sx={{
-                        borderLeft: `3px solid ${accent}`,
-                        pl: 2,
-                        py: 0.5,
-                      }}
-                    >
-                      <Typography fontWeight="bold" fontSize={15}>
-                        {workExperience.position}
-                      </Typography>
-
-                      <Typography
-                        fontSize={13}
-                        fontWeight={600}
-                        color="#475569"
-                        mt={0.5}
-                      >
-                        {workExperience.company}
-                      </Typography>
-
-                      <Typography
-                        fontSize={12}
-                        color="#64748b"
-                        mt={0.5}
-                      >
-                        {workExperience.startDate}
-                        {workExperience.startDate &&
-                          workExperience.endDate
-                          ? " — "
-                          : ""}
-                        {workExperience.endDate}
-                      </Typography>
-
-                      {workExperience.description && (
-                        <Typography
-                          fontSize={13}
-                          lineHeight={1.8}
-                          mt={1}
-                          sx={{ whiteSpace: "pre-wrap" }}
-                        >
-                          {workExperience.description}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-                )}
+              <WorkExperiencePreview
+                workExperience={workExperience}
+                accent={accent}
+              />
 
               {/* Education */}
-              {(education.degree ||
-                education.institution ||
-                education.startYear ||
-                education.endYear) && (
-                  <Box mb={4} className="resume-section pdf-keep-together">
-                    <SectionHeading>EDUCATION</SectionHeading>
+              <EducationPreview
+                education={education}
+                accent={accent}
+              />
 
-                    <Box
-                      className="resume-entry"
-                      sx={{
-                        borderLeft: `3px solid ${accent}`,
-                        pl: 2,
-                        py: 0.5,
-                      }}
-                    >
-                      <Typography fontWeight="bold" fontSize={15}>
-                        {education.degree}
-                      </Typography>
-
-                      <Typography
-                        fontSize={13}
-                        color="#475569"
-                        mt={0.5}
-                      >
-                        {education.institution}
-                      </Typography>
-
-                      <Typography
-                        fontSize={12}
-                        color="#64748b"
-                        mt={0.5}
-                      >
-                        {education.startYear}
-                        {education.startYear && education.endYear
-                          ? " — "
-                          : ""}
-                        {education.endYear}
-                      </Typography>
-                    </Box>
-                  </Box>
-                )}
-
-              {/* Key skills */}
-              {skills.length > 0 && (
-                <Box
-                  sx={{ mt: 4, mb: 4 }}
-                  className="resume-section pdf-keep-together"
-                >
-                  <SectionHeading>KEY SKILLS</SectionHeading>
-
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 1.2,
-                    }}
-                  >
-                    {skills.map((skill, index) => (
-                      <Box
-                        key={`${skill}-${index}`}
-                        sx={{
-                          backgroundColor: `${accent}12`,
-                          border: `1px solid ${accent}`,
-                          color: accent,
-                          borderRadius: 2,
-                          px: 2,
-                          py: 0.8,
-                          fontSize: 12,
-                          fontWeight: 600,
-                        }}
-                      >
-                        {skill}
-                      </Box>
-                    ))}
-                  </Box>
-                </Box>
-              )}
-
+              {/* Key Skills */}
+              <KeySkillsPreview
+                skills={skills}
+                accent={accent}
+              />
 
               {/* Projects */}
-              {projects.length > 0 && (
-                <Box mb={4}>
-                  <SectionHeading>PROJECTS</SectionHeading>
-
-                  {projects.map((project, index) => (
-                    <Box
-                      key={index}
-                      className="pdf-keep-together"
-                      sx={{
-                        mt: 2,
-                        mb: 3,
-                        borderLeft: `3px solid ${accent}`,
-                        pl: 2,
-                        py: 0.5,
-                      }}
-                    >
-                      <Typography fontWeight="bold" fontSize={15}>
-                        {project.name}
-                      </Typography>
-
-                      {project.technologies && (
-                        <Typography fontSize={12} color="#475569" mt={0.5}>
-                          Technologies: {project.technologies}
-                        </Typography>
-                      )}
-
-                      {project.description && (
-                        <Typography
-                          fontSize={13}
-                          lineHeight={1.8}
-                          mt={1}
-                          sx={{ whiteSpace: "pre-wrap" }}
-                        >
-                          {project.description}
-                        </Typography>
-                      )}
-
-                      {project.link && (
-                        <Typography
-                          component="a"
-                          href={project.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          fontSize={12}
-                          sx={{ color: accent, overflowWrap: "anywhere" }}
-                        >
-                          {project.link}
-                        </Typography>
-                      )}
-                    </Box>
-                  ))}
-                </Box>
-              )}
+              <ProjectsPreview
+                projects={projects}
+                accent={accent}
+              />
 
               {/* Certifications */}
-              {certifications.length > 0 && (
-                <Box mb={4} className="pdf-page-start">
-                  <SectionHeading>CERTIFICATIONS</SectionHeading>
-
-                  {certifications.map((certificate, index) => (
-                    <Box
-                      key={index}
-                      className="pdf-keep-together"
-                      sx={{
-                        mt: 2,
-                        mb: 3,
-                        borderLeft: `3px solid ${accent}`,
-                        pl: 2,
-                        py: 0.5,
-                      }}
-                    >
-                      <Typography fontWeight="bold" fontSize={15}>
-                        {certificate.name}
-                      </Typography>
-
-                      {certificate.organization && (
-                        <Typography fontSize={13} color="#475569" mt={0.5}>
-                          {certificate.organization}
-                        </Typography>
-                      )}
-
-                      {certificate.date && (
-                        <Typography fontSize={12} color="#64748b" mt={0.5}>
-                          {certificate.date}
-                        </Typography>
-                      )}
-
-                      {certificate.link && (
-                        <Typography
-                          component="a"
-                          href={certificate.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          fontSize={12}
-                          sx={{ color: accent, overflowWrap: "anywhere" }}
-                        >
-                          View Certificate
-                        </Typography>
-                      )}
-                    </Box>
-                  ))}
-                </Box>
-              )}
-
+              <CertificationsPreview
+                certifications={certifications}
+                accent={accent}
+              />
 
               {/* Footer */}
               <Divider sx={{ mt: 4, mb: 2 }} />
@@ -669,6 +218,7 @@ if (nextForcedPageStart) {
               Give your resume a name before downloading it.
             </Typography>
 
+            {/* Resume file name */}
             <TextField
               fullWidth
               label="Resume Name"
@@ -697,17 +247,17 @@ if (nextForcedPageStart) {
             <Button
               fullWidth
               variant="contained"
+              onClick={downloadPDF}
+              disabled={loading}
               startIcon={
                 loading ? (
-                  <CircularProgress size={18} color="inherit" />
+                  <CircularProgress size={20} color="inherit" />
                 ) : (
                   <DownloadIcon />
                 )
               }
-              onClick={downloadPDF}
-              disabled={loading}
               sx={{
-                py: 1.4,
+                py: 1.2,
                 borderRadius: 2,
                 backgroundColor: accent,
                 "&:hover": {
@@ -722,53 +272,15 @@ if (nextForcedPageStart) {
         </Box>
       </Container>
 
-      {/* Success dialog */}
-      <Dialog
+      {/* Download success dialog */}
+      <DownloadSuccessDialog
         open={openModal}
         onClose={() => setOpenModal(false)}
-        fullWidth
-        maxWidth="xs"
-      >
-        <DialogTitle sx={{ textAlign: "center" }}>
-          <CheckCircleIcon
-            sx={{
-              fontSize: 65,
-              color: "#16a34a",
-            }}
-          />
-
-          <Typography variant="h5" fontWeight="bold">
-            Resume Downloaded!
-          </Typography>
-        </DialogTitle>
-
-        <DialogContent>
-          <Typography
-            textAlign="center"
-            color="text.secondary"
-          >
-            Your resume has been successfully generated
-            and downloaded.
-          </Typography>
-        </DialogContent>
-
-        <DialogActions
-          sx={{
-            justifyContent: "center",
-            pb: 3,
-          }}
-        >
-          <Button
-            variant="contained"
-            onClick={() => {
-              setOpenModal(false);
-              navigate("/");
-            }}
-          >
-            Back to Home
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onBackHome={() => {
+          setOpenModal(false);
+          navigate("/");
+        }}
+      />
     </>
   );
 }
